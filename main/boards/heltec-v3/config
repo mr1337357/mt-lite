@@ -1,0 +1,3 @@
+list(APPEND SRCS "boards/heltec-v3/board.c")
+
+set(BOARD HELTECV3)
