@@ -1,6 +1,6 @@
 #board specific stuff
-list(APPEND INC "boards/heltec-v3")
-list(APPEND SRCS "boards/heltec-v3/board.c")
+list(APPEND INC "boards/nugget_usb")
+list(APPEND SRCS "boards/nugget_usb/board.c")
 
 #HAL
 list(APPEND INC "hal/gpio")
@@ -11,9 +11,10 @@ list(APPEND SRCS "hal/spi/spi_esp32.c")
 
 #Drivers
 list(APPEND INC "drivers/radio")
-list(APPEND SRCS "drivers/radio/sx1262.c")
+list(APPEND SRCS "drivers/radio/rfm96w.c")
+
 list(APPEND INC "drivers/led")
-list(APPEND SRCS "drivers/led/gpio.c")
+list(APPEND SRCS "drivers/led/ws2812.c")
 
 
-set(BOARD HELTECV3)
+set(BOARD NUGGET_USB)

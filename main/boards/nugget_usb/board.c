@@ -3,10 +3,6 @@
 #include "driver/uart.h"
 
 #include "mt_gpio.h"
-#include "mt_spi.h"
-#include "mt_radio.h"
-
-#include "sx1262.h"
 
 #include "board.h"
 
@@ -32,21 +28,9 @@ void board_pins_init()
 {
     gpio_set_out(LED_PIN);
     gpio_set_high(LED_PIN);
-
-    gpio_set_out(LORA_RST);
-    gpio_set_high(LORA_RST);
-    gpio_set_in(LORA_DIO1);
-    gpio_set_in(LORA_BUSY);
 }
 
 void board_init()
 {
-    sx1262_config radio_config =
-    {
-
-    };
     board_pins_init();
-    spi_init();
-    radio_config.spi_handle = spi_register_device(LORA_NSS,1000000,1);
-    radio_init((void *)&radio_config);
 }

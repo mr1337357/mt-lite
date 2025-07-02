@@ -1,8 +1,8 @@
-message("here is ${CMAKE_SOURCE_DIR}")
-
 #load files used in every build
 set(SRCS "main.c")
 set(INC ".")
+
+list(APPEND SRCS "util/minheap.c")
 
 list(APPEND INC "boards/")
 
