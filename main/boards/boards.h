@@ -1,1 +1,0 @@
-void board_init();
