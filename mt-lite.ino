@@ -1,8 +1,15 @@
+#include "serial_interface.h"
 // include the library
 #include <RadioLib.h>
 
+#define NUGGET_CONNECT
+
 #if defined(WIFI_LORA_32_V3)
 #include "boards/heltec_v3.h"
+#elif defined(NUGGET_CONNECT)
+#include "boards/nugget_connect.h"
+#else
+#error unrecognized board
 #endif
 
 
@@ -23,11 +30,10 @@ void setFlag(void) {
 
 void setup() {
   Serial.begin(115200);
-
-  hspi->begin(SCK, MISO, MOSI, SS);
-
-  // initialize SX1262 with default settings
-  Serial.print(F("[SX1262] Initializing ... "));
+  Serial.printf("asdf\n");
+  board_init();
+  serial_init();
+  Serial.printf("Radio Init\n");
   int state = radio.begin(906.875, 250.0, 11, 5, 0x2B, 22, 16, 1.6, false);
   if (state == RADIOLIB_ERR_NONE) {
     Serial.println(F("success!"));
@@ -51,19 +57,11 @@ void setup() {
     Serial.println(state);
     while (true) { delay(10); }
   }
-
-  // if needed, 'listen' mode can be disabled by calling
-  // any of the following methods:
-  //
-  // radio.standby()
-  // radio.sleep()
-  // radio.transmit();
-  // radio.receive();
-  // radio.scanChannel();
 }
 
 void loop() {
   int i;
+  serial_update();
   // check if the flag is set
   if(receivedFlag) {
     // reset flag
