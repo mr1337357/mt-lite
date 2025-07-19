@@ -1,4 +1,5 @@
 #include "serial_interface.h"
+#include "nvdata.h"
 // include the library
 #include <RadioLib.h>
 
@@ -33,6 +34,9 @@ void setup() {
   Serial.printf("asdf\n");
   board_init();
   serial_init();
+
+  nvdata.init();
+
   Serial.printf("Radio Init\n");
   int state = radio.begin(906.875, 250.0, 11, 5, 0x2B, 22, 16, 1.6, false);
   if (state == RADIOLIB_ERR_NONE) {
