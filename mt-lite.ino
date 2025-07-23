@@ -1,5 +1,5 @@
 #include "serial_interface.h"
-#include "nvdata.h"
+
 // include the library
 #include <RadioLib.h>
 
@@ -22,7 +22,7 @@ volatile bool receivedFlag = false;
 // IMPORTANT: this function MUST be 'void' type
 //            and MUST NOT have any arguments!
 #if defined(ESP8266) || defined(ESP32)
-  ICACHE_RAM_ATTR
+ICACHE_RAM_ATTR
 #endif
 void setFlag(void) {
   // we got a packet, set the flag
@@ -31,11 +31,12 @@ void setFlag(void) {
 
 void setup() {
   Serial.begin(115200);
+  delay(5000);
   Serial.printf("asdf\n");
   board_init();
   serial_init();
 
-  nvdata.init();
+  //nvdata.init();
 
   Serial.printf("Radio Init\n");
   int state = radio.begin(906.875, 250.0, 11, 5, 0x2B, 22, 16, 1.6, false);
@@ -82,10 +83,10 @@ void loop() {
 
     // you can also read received data as byte array
     /*
-      byte byteArr[8];
-      int numBytes = radio.getPacketLength();
-      int state = radio.readData(byteArr, numBytes);
-    */
+       byte byteArr[8];
+       int numBytes = radio.getPacketLength();
+       int state = radio.readData(byteArr, numBytes);
+       */
 
     if (state == RADIOLIB_ERR_NONE) {
       // packet was successfully received

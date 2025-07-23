@@ -2,6 +2,7 @@
 #define BUFFER_LENGTH 300
 uint8_t input_buffer[BUFFER_LENGTH];
 int input_length = 0;
+int frame_length = 0;
 
 void serial_init()
 {
@@ -16,37 +17,53 @@ void serial_update()
    while(Serial.available())
    {
       uint8_t inchar = Serial.read();
-      if(input_length >= 2)
+      switch(input_length)
       {
-         if(input_length < BUFFER_LENGTH)
-         {
+         case 0:
+            if(inchar == 0x94)
+            {
+               input_buffer[input_length++] = inchar;
+            }
+            break;
+         case 1:
+            if(inchar == 0xC3)
+            {
+               input_buffer[input_length++] = inchar;
+            }
+            else
+            {
+               input_length = 0;
+            }
+            break;
+         case 2:
+            frame_length = inchar;
             input_buffer[input_length++] = inchar;
-         }
-         if(inchar == '\n')
-         {
-            //TODO handle message
-            memset(input_buffer,0,BUFFER_LENGTH);
-            input_length = 0;
-         }
+            break;
+         case 3:
+            frame_length <<= 8;
+            frame_length |= inchar;
+            input_buffer[input_length++] = inchar;
+            break;
+         default:
+            if(input_length < frame_length+4)
+            {
+               input_buffer[input_length++] = inchar;
+            }
+            break;
       }
-      else if(input_length < 2)
+      if(input_length == frame_length + 4)
       {
-         if(inchar == '~')
-         {
-            input_buffer[input_length++] = inchar;
-         }
-         else
-         {
-            input_length = 0;
-         }
+         //TODO handle message
+         memset(input_buffer,0,BUFFER_LENGTH);
+         input_length = 0;
       }
    }
 }
 
 void serial_send(uint8_t *buffer, int len)
 {
-    Serial.write('~');
-    Serial.write('~');
-    Serial.write(buffer,len);
-    Serial.write('\n');
+   Serial.write('~');
+   Serial.write('~');
+   Serial.write(buffer,len);
+   Serial.write('\n');
 }
