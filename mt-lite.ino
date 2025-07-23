@@ -1,9 +1,10 @@
 #include "serial_interface.h"
+#include "nvdata.h"
 
 // include the library
 #include <RadioLib.h>
 
-#define NUGGET_CONNECT
+//#define NUGGET_CONNECT
 
 #if defined(WIFI_LORA_32_V3)
 #include "boards/heltec_v3.h"
@@ -29,17 +30,26 @@ void setFlag(void) {
   receivedFlag = true;
 }
 
+float freq = 906.875;
+
 void setup() {
+  int len;
   Serial.begin(115200);
-  delay(5000);
-  Serial.printf("asdf\n");
+  delay(1000);
+  Serial.printf("System init\n");
   board_init();
   serial_init();
 
-  //nvdata.init();
+  nvdata.init();
+  len = 4;
+  if(nvdata.get("freq",(uint8_t *)&freq,&len)<0)
+  {
+    nvdata.set("freq",(uint8_t *)&freq,4);
+    nvdata.save();
+  }
 
   Serial.printf("Radio Init\n");
-  int state = radio.begin(906.875, 250.0, 11, 5, 0x2B, 22, 16, 1.6, false);
+  int state = radio.begin(freq, 250.0, 11, 5, 0x2B, 22, 16, 1.6, false);
   if (state == RADIOLIB_ERR_NONE) {
     Serial.println(F("success!"));
   } else {
