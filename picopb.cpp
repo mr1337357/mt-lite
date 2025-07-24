@@ -29,6 +29,7 @@ uint64_t picopb::decode_varint(size_t *size)
    }
    return value;
 }
+
 int picopb::skip()
 {
    offset += next_size + 1;
@@ -89,10 +90,52 @@ int picopb::read_i32(uint32_t *out)
    return 1;
 }
 
+int picopb::encode_varint(uint64_t num)
+{
+   int shift;
+   for(shift=56;shift > 0;shift-=7)
+   {
+      if((num>>shift)&0x7F)
+      {
+         break;
+      }
+   }
+   for(;shift >= 0;shift-=7)
+   {
+      buffer[offset++]=(num>>shift)|0x80;
+   }
+   buffer[offset-1]&=~0x80;
+   return 0;
+}
+
+int picopb::write_varint(int id, uint64_t num)
+{
+  buffer[offset++] = (id << 3) | pb_type::VARINT;
+  encode_varint(num);
+  return 0;
+}
+
+int picopb::write_string(int id, uint8_t *bytes, int len)
+{
+  int i;
+  buffer[offset++] = (id << 3) | pb_type::STRING;
+  encode_varint(len);
+  for(i=0;i<len;i++)
+  {
+    buffer[offset++] = bytes[i];
+  }
+  return 0;
+}
+
+int picopb::get_length()
+{
+  return offset;
+}
+
 pb_type picopb::decode_next(int *id,size_t *size)
 {
    size_t string_len;
-   if(offset == length)
+   if(offset >= length)
    {
       *size = 0;
       *id = 0;

@@ -24,7 +24,12 @@ class picopb
     int read_string(uint8_t *string,uint8_t bufsz);
     int read_i32(uint32_t *out);
 
+    int get_length();
+    int write_varint(int id, uint64_t num);
+    int write_string(int id, uint8_t *bytes, int len);
+
   private:
+    int encode_varint(uint64_t num);
     uint64_t decode_varint(size_t *size);
     uint8_t *buffer;
     size_t length;

@@ -1,5 +1,6 @@
 #include "serial_interface.h"
 #include "nvdata.h"
+#include "picopb.h"
 
 // include the library
 #include <RadioLib.h>
@@ -84,47 +85,19 @@ void loop() {
 
     // you can read received data as an Arduino String
     uint8_t readBuff[256];
+    uint8_t pb_buff[512];
     uint8_t len = radio.getPacketLength(true);
     for(i=0;i<256;i++)
     {
       readBuff[i] = 0;
     }
-    int state = radio.readData(readBuff,256);
-
-    // you can also read received data as byte array
-    /*
-       byte byteArr[8];
-       int numBytes = radio.getPacketLength();
-       int state = radio.readData(byteArr, numBytes);
-       */
+    int state = radio.readData(readBuff,len);
 
     if (state == RADIOLIB_ERR_NONE) {
-      // packet was successfully received
-      Serial.println(F("[SX1262] Received packet!"));
-
-      // print data of the packet
-      Serial.print(F("[SX1262] Data:\t\t"));
-      int i;
-      for(i=0;i<len;i++)
-      {
-        Serial.printf("%02X ",readBuff[i]);
-      }
-      Serial.printf("\n");
-
-      // print RSSI (Received Signal Strength Indicator)
-      Serial.print(F("[SX1262] RSSI:\t\t"));
-      Serial.print(radio.getRSSI());
-      Serial.println(F(" dBm"));
-
-      // print SNR (Signal-to-Noise Ratio)
-      Serial.print(F("[SX1262] SNR:\t\t"));
-      Serial.print(radio.getSNR());
-      Serial.println(F(" dB"));
-
-      // print frequency error
-      Serial.print(F("[SX1262] Frequency error:\t"));
-      Serial.print(radio.getFrequencyError());
-      Serial.println(F(" Hz"));
+      picopb pb(pb_buff,512);
+      pb.write_varint(1,1);
+      pb.write_string(2,readBuff,len);
+      serial_send(pb_buff,pb.get_length());
 
     } else if (state == RADIOLIB_ERR_CRC_MISMATCH) {
       // packet was received, but is malformed

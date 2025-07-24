@@ -5,4 +5,6 @@ void serial_init();
 
 void serial_update();
 
+void serial_send(uint8_t *buffer, int len);
+
 #endif
