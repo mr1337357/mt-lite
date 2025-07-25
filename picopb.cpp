@@ -110,26 +110,34 @@ int picopb::encode_varint(uint64_t num)
 
 int picopb::write_varint(int id, uint64_t num)
 {
-  buffer[offset++] = (id << 3) | pb_type::VARINT;
-  encode_varint(num);
-  return 0;
+   buffer[offset++] = (id << 3) | pb_type::VARINT;
+   encode_varint(num);
+   return 0;
+}
+
+int picopb::write_i64(int id, uint64_t num)
+{
+   buffer[offset++] = (id<<3) | pb_type::I64;
+   memcpy(&buffer[offset],&num,8);
+   offset+=8;
+   return 0;
 }
 
 int picopb::write_string(int id, uint8_t *bytes, int len)
 {
-  int i;
-  buffer[offset++] = (id << 3) | pb_type::STRING;
-  encode_varint(len);
-  for(i=0;i<len;i++)
-  {
-    buffer[offset++] = bytes[i];
-  }
-  return 0;
+   int i;
+   buffer[offset++] = (id << 3) | pb_type::STRING;
+   encode_varint(len);
+   for(i=0;i<len;i++)
+   {
+      buffer[offset++] = bytes[i];
+   }
+   return 0;
 }
 
 int picopb::get_length()
 {
-  return offset;
+   return offset;
 }
 
 pb_type picopb::decode_next(int *id,size_t *size)

@@ -26,7 +26,9 @@ class picopb
 
     int get_length();
     int write_varint(int id, uint64_t num);
+    int write_i64(int id, uint64_t out);
     int write_string(int id, uint8_t *bytes, int len);
+    int write_i32(int id, uint32_t out);
 
   private:
     int encode_varint(uint64_t num);
