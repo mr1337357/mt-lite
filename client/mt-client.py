@@ -2,7 +2,12 @@ import sys
 import select
 import serial
 import time
+import datetime
+import traceback
+
 import pypb
+import mt_packet
+import mt_crypto
 
 class mt():
     def __init__(self,connection,logfile = None):
@@ -47,16 +52,30 @@ class mt():
             return msg
         return None
     
-def 
+#def 
         
 if __name__ == '__main__':
+    log = open('test.log','w')
     dev = serial.Serial(sys.argv[1],115200)
     mesht = mt(dev)
     while True:
         mesht.update()
         pkt = mesht.get()
         if pkt != None:
-            print(pkt)
+            print('packet')
             pb = pypb.protobuf(pkt).to_map()
-            print(pb)
-        time.sleep(1)
+            try:
+                
+                mtp = mt_packet.mt_packet(pb[2])
+                log.write(pb[2].hex()+'\n')
+                log.flush()
+                mtp.dump()
+                asdf = mt_crypto.encrypt_packet(mtp)
+                dec = pypb.protobuf(mtp.payload).to_map()
+                print(dec)
+            except Exception as e:
+                print('except')
+                print(e)
+                print(traceback.format_exc())
+            
+        time.sleep(.1)
