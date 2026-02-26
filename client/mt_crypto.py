@@ -22,7 +22,7 @@ def encrypt_packet(packet,psk):
                 out[i + j] = cypher[j] ^ packet.payload[i + j]
             except:
                 pass
-        nonce[12] += 1
+        nonce[15] += 1
         i += 16
     bpayload = bytes(out)
     packet.payload = bpayload

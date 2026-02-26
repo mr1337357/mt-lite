@@ -52,14 +52,15 @@ class mt_lite:
             pb = pypb.protobuf(msg).to_map()
             if pb[1] == 1:
                 mtp = mt_packet(pb[2])
+                mtp.rssi = pb[3]-100
                 try:
                     chan = mt_channel.get_channel_by_hash(mtp.hash)
                 except:
-                    print('unknown channel hash {}'.format(mtp.hash))
-                    return None
-                asdf = mt_crypto.encrypt_packet(mtp,chan.key)
+                    return mtp
+                mt_crypto.encrypt_packet(mtp,chan.key)
                 dec = pypb.protobuf(mtp.payload).to_map()
-                #print(dec)
-                return dec
+                mtp.decrypted = True
+                mtp.payload = dec
+                return mtp
 
         return None

@@ -16,6 +16,7 @@ class mt_packet:
         self.payload = self.buffer[16:]
 
     def __init__(self,buffer=None):
+        self.decrypted = False
         if buffer != None:
             self.buffer=buffer
             self.from_buffer()
