@@ -103,7 +103,7 @@ void serial_update()
          int i;
          for(i=0;i<input_length;i++)
          {
-          Serial.printf("%02X ",input_buffer[i]);
+            Serial.printf("%02X ",input_buffer[i]);
          }
          Serial.printf("\n");
          decode(input_buffer+4,frame_length);
