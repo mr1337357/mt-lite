@@ -33,6 +33,13 @@ void setFlag(void) {
 
 float freq = 906.875;
 
+void mt_send(uint8_t *buff, int len)
+{
+  
+  radio.transmit(buff,len);
+  radio.startReceive();
+}
+
 void setup() {
   int len;
   Serial.begin(115200);
@@ -97,6 +104,8 @@ void loop() {
       picopb pb(pb_buff,512);
       pb.write_varint(1,1);
       pb.write_string(2,readBuff,len);
+      float rssi = radio.getRSSI(true);
+      pb.write_varint(3,rssi+100);
       serial_send(pb_buff,pb.get_length());
 
     } else if (state == RADIOLIB_ERR_CRC_MISMATCH) {

@@ -80,7 +80,7 @@ int picopb::read_string(uint8_t *string,uint8_t bufsz)
 
 int picopb::read_i32(uint32_t *out)
 {
-   if(next_type != pb_type::I64)
+   if(next_type != pb_type::I32)
    {
       return 0;
    }

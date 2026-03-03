@@ -1,6 +1,10 @@
 #include <Arduino.h>
 
 #include "picopb.h"
+#include "nvdata.h"
+
+#include <RadioLib.h>
+
 
 #define BUFFER_LENGTH 300
 uint8_t input_buffer[BUFFER_LENGTH];
@@ -10,6 +14,9 @@ int frame_length = 0;
 void serial_init()
 {
 }
+uint8_t send_buffer[256];
+
+void mt_send(uint8_t *buff, int len);
 
 void decode(uint8_t *buff, int len)
 {
@@ -17,16 +24,34 @@ void decode(uint8_t *buff, int len)
    size_t size;
    pb_type t;
    picopb *pb = new picopb(buff,len);
+   t = pb->decode_next(&id,&size);
+   if(t == pb_type::VARINT)
+   {
+    if(id == 1)
+    {
+      //transmit packet
+      t = pb->decode_next(&id,&size);
+      if(t == pb_type::STRING)
+      {
+        if(id == 2)
+        {
+          pb->read_string(send_buffer,256);
+          mt_send(send_buffer,size);
+        }
+      }
+    }
+   }
    while(1)
    {
       t = pb->decode_next(&id,&size);
-      Serial.printf("type: %d id: %d size: %d\n",t,id,size);
+      //Serial.printf("type: %d id: %d size: %d\n",t,id,size);
       if(t == pb_type::INVALID)
       {
          return;
       }
       else
       {
+        if(id == 1)
          pb->skip();
       }
    }
