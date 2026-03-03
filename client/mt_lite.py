@@ -1,3 +1,4 @@
+import sys
 import traceback
 
 import pypb
@@ -42,7 +43,17 @@ class mt_lite:
                 self.inlen = self.inbuff[2] * 256 + self.inbuff[3]
             else:
                 sys.stdout.write(chr(b))
-        
+
+    def get_raw(self):
+        msg = None
+        if len(self.inqueue) > 0:
+            msg = self.inqueue[0]
+            self.inqueue = self.inqueue[1:]
+        return msg
+
+    def decode(self,buff):
+        pb = pypb.protobuf(msg).to_map()
+
     def get(self):
         if len(self.inqueue) > 0:
             msg = self.inqueue[0]
@@ -51,7 +62,11 @@ class mt_lite:
             #we're unpacking our local protobuf between radio and pc
             pb = pypb.protobuf(msg).to_map()
             if pb[1] == 1:
-                mtp = mt_packet(pb[2])
+                mtp = None
+                try:
+                    mtp = mt_packet(pb[2])
+                except:
+                    return None
                 mtp.rssi = pb[3]-100
                 try:
                     chan = mt_channel.get_channel_by_hash(mtp.hash)

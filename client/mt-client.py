@@ -7,6 +7,7 @@ import traceback
 
 import pypb
 from mt_lite import mt_lite
+from sql_wrapper import sqlwrapper
 #import mt_packet
 #import mt_crypto
         
@@ -24,18 +25,30 @@ def check_dedup(pkt):
     return False
 
 def nodeinfo(pkt):
+    global sources
     pb = pypb.protobuf(pkt.payload[2])
-    print(pb.to_map())
     for name, t, value in pb:
         print(name,t,value)
+    sources[pkt.src] = pb.to_map()
         
 
 def pos(pkt):
+    for b in pkt.payload[2]:
+        sys.stdout.write('{:02x} '.format(b))
+    print('')
     pb = pypb.protobuf(pkt.payload[2])
+    for name, t, value in pb:
+        if t == 'PB_I32':
+            if value >= 2**31:
+                value -= 2**32
+            #value = pypb.pb_unsigned_to_signed(value)
+            value /=10000000
+        print(name,t,value)
     print(pb.to_map())
 
 if __name__ == '__main__':
     log = open('test.log','w')
+    users = sqlwrapper()
     dev = serial.Serial(sys.argv[1],115200)
     mesht = mt_lite(dev)
     while True:
@@ -43,24 +56,31 @@ if __name__ == '__main__':
         pkt = mesht.get()
         if pkt != None:
             if check_dedup(pkt):
+                pass
                 continue
             if not pkt.src in sources:
-                sources[pkt.src] = None
+                sources[pkt.src] = {2:hex(pkt.src)}
+            if not pkt.dest in sources:
+                sources[pkt.dest] = {2:hex(pkt.dest)}
             print('packet')
-            print('from: {}'.format(hex(pkt.src)))
-            print('to:   {}'.format(hex(pkt.dest)))
+            print('from: {}'.format(sources[pkt.src][2]))
+            print('to:   {}'.format(sources[pkt.dest][2]))
             print('hops: {}/{}'.format(pkt.hopcount,pkt.maxhop))
             print('rssi: {}'.format(pkt.rssi))
             if pkt.decrypted == True:
-                print(pkt.payload)
-                if pkt.payload[1] == 1:
-                    print('text')
-                if pkt.payload[1] == 3:
-                    print('pos')
-                    pos(pkt)
-                if pkt.payload[1] == 4:
-                    print('nodeinfo')
-                    nodeinfo(pkt)
+                try:
+                    print(pkt.payload)
+                    if pkt.payload[1] == 1:
+                        print('text')
+                        
+                    if pkt.payload[1] == 3:
+                        print('pos')
+                        pos(pkt)
+                    if pkt.payload[1] == 4:
+                        print('nodeinfo')
+                        nodeinfo(pkt)
+                except:
+                    pass
             else:
                 print('undecrypted')
             print('')

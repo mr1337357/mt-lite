@@ -3,6 +3,19 @@ PB_I64 = 1
 PB_STRING = 2
 PB_I32 = 5
 PB_INVALID = 7
+typenames = {
+    PB_VARINT: 'PB_VARINT',
+    PB_I64: 'PB_I64',
+    PB_STRING: 'PB_STRING',
+    PB_I32: 'PB_I32',
+    PB_INVALID: 'PB_INVALID'
+}
+
+def pb_unsigned_to_signed(num,bits=32):
+    if num & 1:
+        return -(num>>1)
+    return num>>1
+
 class protobuf:
     def __init__(self, buffer = None):
         self.isDecode = True
@@ -34,7 +47,21 @@ class protobuf:
             self.offset+=1
             if b < 128:
                 return num
-
+    
+    def decode_i32(self):
+        num = 0
+        for i in range(4):
+            num += self.buffer[self.offset] << (8*i)
+            self.offset+=1
+        return num
+    
+    def decode_i64(self):
+        num = 0
+        for i in range(8):
+            num += self.buffer[self.offset] << (8*i)
+            self.offset+=1
+        return num
+    
     def to_map(self):
         m = {}
         for name,t,value in self:
@@ -47,14 +74,20 @@ class protobuf:
         self.ident()
         if self.nextType == PB_VARINT:
             num = self.decode_varint()
-            return (self.nextIndex,self.nextType,num)
-        if self.nextType == PB_STRING:
+            return (self.nextIndex,typenames[self.nextType],num)
+        elif self.nextType == PB_STRING:
             length = self.decode_varint()
             out = b''
             for i in range(length):
                 out += self.buffer[self.offset].to_bytes(1,'little')
                 self.offset += 1
-            return (self.nextIndex,self.nextType,out)
+            return (self.nextIndex,typenames[self.nextType],out)
+        elif self.nextType == PB_I32:
+            num = self.decode_i32()
+            return (self.nextIndex,typenames[self.nextType],num) 
+        else:
+            print('unknown type: {}'.format(self.nextType))
+            return None  
             
     def encode_varint(self,num):
         while num > 127:

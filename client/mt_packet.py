@@ -2,9 +2,9 @@
 class mt_packet:
     
     def from_buffer(self):
-        self.dest = int.from_bytes(self.buffer[0:4])
-        self.src = int.from_bytes(self.buffer[4:8])
-        self.seq = int.from_bytes(self.buffer[8:12])
+        self.dest = int.from_bytes(self.buffer[0:4],byteorder='little')
+        self.src = int.from_bytes(self.buffer[4:8],byteorder='little')
+        self.seq = int.from_bytes(self.buffer[8:12],byteorder='little')
         self.flags = int.from_bytes(self.buffer[12:13])
         self.hash = int.from_bytes(self.buffer[13:14])
         self.nexthop = int.from_bytes(self.buffer[14:15])

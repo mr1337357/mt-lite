@@ -9,8 +9,8 @@ class aesctr:
 
 def encrypt_packet(packet,psk):
     nonce = [0] * 16
-    nonce[0:4] = packet.seq.to_bytes(4)
-    nonce[8:12] = packet.src.to_bytes(4)
+    nonce[0:4] = packet.seq.to_bytes(4,byteorder='little')
+    nonce[8:12] = packet.src.to_bytes(4,byteorder='little')
     crypto = AES.new(bytes(psk), AES.MODE_ECB)
     i = 0
     out = [0] * len(packet.payload)
