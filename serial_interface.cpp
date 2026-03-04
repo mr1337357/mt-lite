@@ -117,7 +117,7 @@ void serial_send(uint8_t *buffer, int len)
 {
    Serial.write(0x94);
    Serial.write(0xC3);
-   Serial.write(0x00);
+   Serial.write(len>>8);
    Serial.write(len);
    Serial.write(buffer,len);
 }

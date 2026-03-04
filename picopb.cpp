@@ -123,6 +123,14 @@ int picopb::write_i64(int id, uint64_t num)
    return 0;
 }
 
+int picopb::write_i32(int id, uint32_t num)
+{
+   buffer[offset++] = (id<<3) | pb_type::I32;
+   memcpy(&buffer[offset],&num,4);
+   offset+=4;
+   return 0;
+}
+
 int picopb::write_string(int id, uint8_t *bytes, int len)
 {
    int i;

@@ -105,7 +105,7 @@ void loop() {
       pb.write_varint(1,1);
       pb.write_string(2,readBuff,len);
       float rssi = radio.getRSSI(true);
-      pb.write_varint(3,rssi+100);
+      pb.write_i32(3,rssi);
       serial_send(pb_buff,pb.get_length());
 
     } else if (state == RADIOLIB_ERR_CRC_MISMATCH) {
