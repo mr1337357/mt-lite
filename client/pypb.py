@@ -96,14 +96,21 @@ class protobuf:
             num >>= 7
         self.buffer += num.to_bytes(1,'little')
         
+    def encode_i32(self,num):
+        self.buffer += num.to_bytes(4,'little')
+
     def encode(self,index,pb_type,data):
         key = index << 3 | pb_type
         self.buffer += key.to_bytes(1,'little')
         if pb_type == PB_VARINT:
             self.encode_varint(data)
+        if pb_type == PB_I32:
+            self.encode_i32(data)
         if pb_type == PB_STRING:
             self.encode_varint(len(data))
             for b in data:
+                if type(b) == str:
+                    b = ord(b)
                 self.buffer += b.to_bytes(1,'little')
     
     def __iter__(self):

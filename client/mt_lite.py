@@ -8,74 +8,56 @@ import mt_channel
 from mt_packet import mt_packet
 
 class mt_lite:
-    def __init__(self,connection,logfile = None):
-        self.connection = connection
-        self.inbuff = []
-        self.inqueue = []
-        self.inlen = 0
+    def __init__(self,radio,logfile = None):
+        self.radio = radio
+
         mt_channel.add_channel('LongFast',1)
         
     def update(self):
-        while self.connection.in_waiting > 0:
-            rxlen = len(self.inbuff)
-            b = ord(self.connection.read())
-
-            if self.inlen > 0:
-                self.inbuff.append(b)
-                self.inlen -= 1
-                if self.inlen == 0:
-                    self.inqueue.append(self.inbuff[4:])
-                    self.inbuff = []
-            elif rxlen == 0:
-                if b == 0x94:
-                    self.inbuff.append(b)
-                else:
-                    sys.stdout.write(chr(b))
-            elif rxlen == 1:
-                if b == 0xC3:
-                    self.inbuff.append(b)
-                else:
-                    self.inbuff = []
-            elif rxlen == 2:
-                self.inbuff.append(b)
-            elif rxlen == 3:
-                self.inbuff.append(b)
-                self.inlen = self.inbuff[2] * 256 + self.inbuff[3]
-            else:
-                sys.stdout.write(chr(b))
-
-    def get_raw(self):
-        msg = None
-        if len(self.inqueue) > 0:
-            msg = self.inqueue[0]
-            self.inqueue = self.inqueue[1:]
-        return msg
+        self.radio.update()
 
     def decode(self,buff):
-        pb = pypb.protobuf(msg).to_map()
-
-    def get(self):
-        if len(self.inqueue) > 0:
-            msg = self.inqueue[0]
-            self.inqueue = self.inqueue[1:]
-            #print('packet')
-            #we're unpacking our local protobuf between radio and pc
-            pb = pypb.protobuf(msg).to_map()
-            if pb[1] == 1:
-                mtp = None
-                try:
-                    mtp = mt_packet(pb[2])
-                except:
-                    return None
-                mtp.rssi = pb[3]-100
-                try:
-                    chan = mt_channel.get_channel_by_hash(mtp.hash)
-                except:
-                    return mtp
+        pb = pypb.protobuf(buff).to_map()
+        if pb[1] == 1:
+            raw = pb[2]
+            mtp = None
+            try:
+                mtp = mt_packet(raw)
+            except:
+                return None
+            mtp.rssi = pb[3]
+            if mtp.rssi>= 2**31:
+                mtp.rssi -= 2**32
+            try:
+                chan = mt_channel.get_channel_by_hash(mtp.hash)
                 mt_crypto.encrypt_packet(mtp,chan.key)
                 dec = pypb.protobuf(mtp.payload).to_map()
                 mtp.decrypted = True
                 mtp.payload = dec
-                return mtp
+            except:
+                pass
+            
+        return mtp
 
+    def get_raw(self):
+        return self.radio.read()
+
+    def get(self):
+        msg = self.radio.read()
+        if msg != None:
+            dec = self.decode(msg)
+            return dec
         return None
+    
+    def send(self,msg):
+        if msg.decrypted == True:
+            chan = mt_channel.get_channel_by_hash(msg.hash)
+            mt_crypto.encrypt_packet(msg,chan.key)
+        msg.decrypted = False
+        wrapper = pypb.protobuf()
+        wrapper.encode(1,pypb.PB_VARINT,1)
+        wrapper.encode(2,pypb.PB_STRING,msg.to_buffer())
+        print(wrapper.to_map())
+        print(wrapper.get_buffer())
+        buff = wrapper.get_buffer()
+        self.radio.write(buff)

@@ -5,6 +5,8 @@ import time
 import datetime
 import traceback
 
+import mt_radio_serial
+
 import pypb
 from mt_lite import mt_lite
 from sql_wrapper import sqlwrapper
@@ -45,12 +47,14 @@ def pos(pkt):
             value /=10000000
         print(name,t,value)
     print(pb.to_map())
+    
 
 if __name__ == '__main__':
     log = open('test.log','w')
+    
     users = sqlwrapper()
-    dev = serial.Serial(sys.argv[1],115200)
-    mesht = mt_lite(dev)
+    radio = mt_radio_serial.mt_radio_serial(sys.argv[1])
+    mesht = mt_lite(radio)
     while True:
         mesht.update()
         pkt = mesht.get()
@@ -73,12 +77,19 @@ if __name__ == '__main__':
                     if pkt.payload[1] == 1:
                         print('text')
                         
-                    if pkt.payload[1] == 3:
+                    elif pkt.payload[1] == 3:
                         print('pos')
                         pos(pkt)
-                    if pkt.payload[1] == 4:
+                    elif pkt.payload[1] == 4:
                         print('nodeinfo')
                         nodeinfo(pkt)
+                    else:
+                        try:
+                            print('unknown app')
+                            info = pypb.protobuf(pkt.payload[2]).to_map()
+                            print(info)
+                        except:
+                            pass
                 except:
                     pass
             else:
