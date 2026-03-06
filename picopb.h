@@ -21,7 +21,7 @@ class picopb
     int skip();
     int read_varint(uint64_t *out);
     int read_i64(uint64_t *out);
-    int read_string(uint8_t *string,uint8_t bufsz);
+    int read_string(uint8_t *string,uint16_t bufsz);
     int read_i32(uint32_t *out);
 
     int get_length();
