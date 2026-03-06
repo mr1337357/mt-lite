@@ -17,11 +17,13 @@ uint64_t picopb::decode_varint(size_t *size)
    {
       value<<=7;
       value|=(buffer[index]&0x7F);
-      index++;
       if((buffer[index]&0x80)==0)
       {
+         index++;
          break;
       }
+      index++;
+
    }
    if(size)
    {
@@ -60,8 +62,9 @@ int picopb::read_i64(uint64_t *out)
    return 1;
 }
 
-int picopb::read_string(uint8_t *string,uint8_t bufsz)
+int picopb::read_string(uint8_t *string,uint16_t bufsz)
 {
+   int i;
    uint64_t string_len;
    size_t varint_len;
    if(next_type != pb_type::STRING)
@@ -73,7 +76,11 @@ int picopb::read_string(uint8_t *string,uint8_t bufsz)
    {
       string_len = bufsz;
    }
-   memcpy(string,&buffer[offset+varint_len+1],string_len);
+   for(i=0;i<string_len;i++)
+   {
+      string[i] = buffer[offset+varint_len+i+1];
+   }
+   //memcpy(string,&buffer[offset+varint_len+1],string_len);
    offset += next_size + 1;
    return 0;
 }

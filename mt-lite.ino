@@ -18,6 +18,7 @@
 
 // flag to indicate that a packet was received
 volatile bool receivedFlag = false;
+volatile bool transmitFlag = false;
 
 // this function is called when a complete packet
 // is received by the module
@@ -31,13 +32,19 @@ void setFlag(void) {
   receivedFlag = true;
 }
 
+void transmitDone(void)
+{
+  transmitFlag = true;
+}
+
 float freq = 906.875;
 
 void mt_send(uint8_t *buff, int len)
 {
-  
-  radio.transmit(buff,len);
-  radio.startReceive();
+  Serial.printf("here %d\n",__LINE__);
+  Serial.printf("txlen %d\n",len);
+  int16_t status = radio.startTransmit(buff,len);
+  Serial.printf("status %d\n",status);
 }
 
 void setup() {
@@ -47,7 +54,7 @@ void setup() {
   Serial.printf("System init\n");
   board_init();
   serial_init();
-
+  pinMode(35,OUTPUT);
   nvdata.init();
   len = 4;
   if(nvdata.get("freq",(uint8_t *)&freq,&len)<0)
@@ -69,6 +76,7 @@ void setup() {
   // set the function that will be called
   // when new packet is received
   radio.setPacketReceivedAction(setFlag);
+  radio.setPacketSentAction(transmitDone);
 
   // start listening for LoRa packets
   Serial.print(F("[SX1262] Starting to listen ... "));
@@ -81,10 +89,26 @@ void setup() {
     while (true) { delay(10); }
   }
 }
+uint64_t led_off_time = 0;
+
+void led_on(int ms)
+{
+  digitalWrite(35,HIGH);
+  led_off_time = millis() + ms;
+}
 
 void loop() {
   int i;
   serial_update();
+  if(millis() >= led_off_time)
+  {
+    digitalWrite(35,LOW);
+  }
+  if(transmitFlag)
+  {
+    radio.startReceive();
+    transmitFlag = false;
+  }
   // check if the flag is set
   if(receivedFlag) {
     // reset flag
@@ -101,6 +125,7 @@ void loop() {
     int state = radio.readData(readBuff,len);
 
     if (state == RADIOLIB_ERR_NONE) {
+      led_on(200);
       picopb pb(pb_buff,512);
       pb.write_varint(1,1);
       pb.write_string(2,readBuff,len);

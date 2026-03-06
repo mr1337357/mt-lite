@@ -29,6 +29,8 @@ void decode(uint8_t *buff, int len)
    {
     if(id == 1)
     {
+      uint64_t pktid;
+      pb->read_varint(&pktid);
       //transmit packet
       t = pb->decode_next(&id,&size);
       if(t == pb_type::STRING)
@@ -57,6 +59,8 @@ void decode(uint8_t *buff, int len)
    }
    delete pb;
 }
+
+void led_on(int ms);
 
 void serial_update()
 {
@@ -99,13 +103,7 @@ void serial_update()
       }
       if(input_length == frame_length + 4)
       {
-         Serial.printf("got frame size %d\n",frame_length);
-         int i;
-         for(i=0;i<input_length;i++)
-         {
-            Serial.printf("%02X ",input_buffer[i]);
-         }
-         Serial.printf("\n");
+         led_on(400);
          decode(input_buffer+4,frame_length);
          memset(input_buffer,0,BUFFER_LENGTH);
          input_length = 0;
