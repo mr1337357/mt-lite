@@ -27,12 +27,8 @@ volatile bool transmitFlag = false;
 #if defined(ESP8266) || defined(ESP32)
 ICACHE_RAM_ATTR
 #endif
-void setFlag(void) {
-  // we got a packet, set the flag
-  receivedFlag = true;
-}
 
-void transmitDone(void)
+void radioEvent(void)
 {
   transmitFlag = true;
 }
@@ -75,8 +71,8 @@ void setup() {
 
   // set the function that will be called
   // when new packet is received
-  radio.setPacketReceivedAction(setFlag);
-  radio.setPacketSentAction(transmitDone);
+  radio.setPacketReceivedAction(radioEvent);
+  radio.setPacketSentAction(radioEvent);
 
   // start listening for LoRa packets
   Serial.print(F("[SX1262] Starting to listen ... "));
@@ -102,12 +98,27 @@ void loop() {
   serial_update();
   if(millis() >= led_off_time)
   {
+    Serial.printf("tick\n");
+    led_off_time += 1000;
     digitalWrite(35,LOW);
   }
   if(transmitFlag)
   {
-    radio.startReceive();
+    int state;
+    state = radio.startReceive();
+    if (state == RADIOLIB_ERR_NONE) {
+      Serial.println(F("success!"));
+    } else {
+      Serial.print(F("failed, code "));
+      Serial.println(state);
+      while (true) { delay(10); }
+    }
     transmitFlag = false;
+    int len = radio.getPacketLength(true);
+    if(len > 0)
+    {
+      receivedFlag = true;
+    }
   }
   // check if the flag is set
   if(receivedFlag) {
