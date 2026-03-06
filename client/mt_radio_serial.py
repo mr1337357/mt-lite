@@ -1,4 +1,5 @@
 import serial
+import sys
 from collections import deque
 
 from mt_radio import mt_radio
@@ -19,6 +20,8 @@ class mt_radio_serial(mt_radio):
             if self.state == 0:
                 if b == 0x94:
                     self.state = 1
+                else:
+                    sys.stdout.write(chr(b))
             
             elif self.state == 1:
                 if b == 0xC3:
