@@ -5,12 +5,13 @@ from collections import deque
 from mt_radio import mt_radio
 
 class mt_radio_serial(mt_radio):
-    def __init__(self,port):
+    def __init__(self,port,diag=False):
         self.ser = serial.Serial(port,115200)
         self.queue = deque()
         self.inbuff = []
         self.state = 0
         self.inlen = 0
+        self.diag = diag
         
     def update(self):
         while self.ser.in_waiting > 0:
@@ -20,7 +21,7 @@ class mt_radio_serial(mt_radio):
             if self.state == 0:
                 if b == 0x94:
                     self.state = 1
-                else:
+                elif self.diag:
                     sys.stdout.write(chr(b))
             
             elif self.state == 1:
