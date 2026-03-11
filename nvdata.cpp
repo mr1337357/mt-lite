@@ -35,10 +35,13 @@ int NVData::init(char *partname) {
    writecounter = -1;
    for(i=1;i<numblocks;i++)
    {
+      Serial.printf("read block %d\n",i);
       block_read(i);
       if((tempdata[0] & 0xC0) == 0x80) //block is valid
       {
+         Serial.printf("block valid\n");
          count = tempdata[0] & 0x3F;
+         Serial.printf("got count %d\n",count);
          if(writecounter == -1)
          {
             writecounter = count;
@@ -169,6 +172,7 @@ int NVData::save()
    {
       active_block = 0;
    }
+   Serial.printf("writing to block %d\n",active_block);
    block_clear(active_block);
    block_save(active_block);
    return 0;
@@ -212,28 +216,36 @@ int NVData::block_init(int block)
 
 int NVData::block_load(int block)
 {
-   int kindex = 1;
-   int vindex = 0;
+  int i;
+  int readlen=0;
+  int index = 1;
    block_read(block);
-   while(kindex < part->erase_size)
+   while(index < part->erase_size)
    {
-      if(tempdata[kindex] < 0xFF)
+      if(tempdata[index] < 0xFF)
       {
-         vindex = kindex + tempdata[kindex] + 1;
-         entries = (NVEntry *)realloc(entries,sizeof(NVEntry)*(num_entries+1));
 
-         entries[num_entries].klen = tempdata[kindex];
-         entries[num_entries].vlen = tempdata[vindex];
-         entries[num_entries].key = (uint8_t *)malloc(tempdata[kindex]);
-         entries[num_entries].val = (uint8_t *)malloc(tempdata[vindex]);
-         memcpy(entries[num_entries].key,&tempdata[kindex+1],entries[num_entries].klen);
-         memcpy(entries[num_entries].val,&tempdata[vindex+1],entries[num_entries].vlen);
-         num_entries++;
-         kindex += entries[num_entries].klen + entries[num_entries].vlen + 2;
+        entries = (NVEntry *)realloc(entries,sizeof(NVEntry)*(num_entries+1));
+        readlen = tempdata[index++];
+        entries[num_entries].klen = readlen;
+        entries[num_entries].key = (uint8_t *)malloc(readlen);
+        for(i=0;i<readlen;i++)
+        {
+          entries[num_entries].key[i] = tempdata[index++];
+        }
+        readlen = tempdata[index++];
+        entries[num_entries].vlen = readlen;
+        entries[num_entries].val = (uint8_t *)malloc(readlen);
+        for(i=0;i<readlen;i++)
+        {
+          entries[num_entries].val[i] = tempdata[index++];
+        }
+
+        num_entries++;
       }
       else
       {
-         kindex = part->erase_size;
+        index = part->erase_size;
       }
    }
    return 0;
@@ -244,6 +256,10 @@ int NVData::block_save(int block)
    int i;
    int j;
    int index = 1;
+   for(i=0;i<part->erase_size;i++)
+   {
+    tempdata[i] = 0xFF;
+   }
    tempdata[0] = 0x80 | (writecounter & 0x3F);
    for(i=0;i<num_entries;i++)
    {

@@ -18,11 +18,96 @@ uint8_t send_buffer[256];
 
 void mt_send(uint8_t *buff, int len);
 
+void serial_send(uint8_t *buffer, int len);
+
+void serial_xmit(picopb *pb)
+{
+  size_t size;
+  int id;
+  pb_type t;
+  //transmit packet
+  t = pb->decode_next(&id,&size);
+  if(id == 2 && t == pb_type::STRING)
+  {
+    pb->read_string(send_buffer,256);
+    mt_send(send_buffer,size);
+  }
+}
+
+void serial_config(picopb *pb)
+{
+  size_t size;
+  int id;
+  pb_type t;
+  uint64_t operation;
+  char key[32];
+  char value[32];
+
+  //transmit packet
+  t = pb->decode_next(&id,&size);
+  if(id == 2 && t == pb_type::VARINT)
+  {
+    pb->read_varint(&operation);
+    switch(operation)
+    {
+      case 0: //read
+      case 1:
+        t = pb->decode_next(&id,&size);
+        if(id == 3 && t == pb_type::STRING)
+        {
+          if(size > 32)
+          {
+            size = 32;
+          }
+          pb->read_string((uint8_t *)key,32);
+          key[size] = 0;
+
+        }
+        else
+        {
+          return;
+        }
+        if(operation == 0)
+        {
+        delete pb;
+          pb = new picopb(send_buffer,256);
+          pb->write_varint(1,2);
+          pb->write_string(2,(uint8_t *)key,size);
+          size = 32;
+          if(nvdata.get(key,(uint8_t *)value,(int *)&size)<0)
+          {
+            size = 0;
+          }
+          pb->write_string(3,(uint8_t *)value,size);
+          serial_send(send_buffer,pb->get_length());
+        }
+        else
+        {
+          t = pb->decode_next(&id,&size);
+          if(id==4 && t == pb_type::STRING)
+          {
+            if(size >32)
+            {
+              size == 32;
+            }
+            pb->read_string((uint8_t *)value,32);
+            nvdata.set(key,(uint8_t *)value,(int)size);
+          }
+        }
+        break;
+      case 2:
+        nvdata.save();
+        break;
+    }
+  }
+}
+
 void decode(uint8_t *buff, int len)
 {
    int id;
    size_t size;
    pb_type t;
+   Serial.printf("decode\n");
    picopb *pb = new picopb(buff,len);
    t = pb->decode_next(&id,&size);
    if(t == pb_type::VARINT)
@@ -31,31 +116,16 @@ void decode(uint8_t *buff, int len)
     {
       uint64_t pktid;
       pb->read_varint(&pktid);
-      //transmit packet
-      t = pb->decode_next(&id,&size);
-      if(t == pb_type::STRING)
+      switch(pktid)
       {
-        if(id == 2)
-        {
-          pb->read_string(send_buffer,256);
-          mt_send(send_buffer,size);
-        }
+        case 1:
+          serial_xmit(pb);
+          break;
+        case 2:
+          serial_config(pb);
+          break;
       }
     }
-   }
-   while(1)
-   {
-      t = pb->decode_next(&id,&size);
-      //Serial.printf("type: %d id: %d size: %d\n",t,id,size);
-      if(t == pb_type::INVALID)
-      {
-         return;
-      }
-      else
-      {
-        if(id == 1)
-         pb->skip();
-      }
    }
    delete pb;
 }

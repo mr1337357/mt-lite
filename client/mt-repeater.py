@@ -53,7 +53,7 @@ if __name__ == '__main__':
     log = open('test.log','w')
     
     users = sqlwrapper()
-    radio = mt_radio_serial.mt_radio_serial(sys.argv[1],diag=True)
+    radio = mt_radio_serial.mt_radio_serial(sys.argv[1])
     mesht = mt_lite(radio)
     while True:
         mesht.update()
@@ -94,5 +94,8 @@ if __name__ == '__main__':
                     pass
             else:
                 print('undecrypted')
+            if pkt.hopcount > 0:
+                pkt.hopcount -=1
+                mesht.send(pkt)
             print('')
         time.sleep(.1)

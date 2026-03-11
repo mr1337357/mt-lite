@@ -18,6 +18,7 @@ class mt_lite:
 
     def decode(self,buff):
         pb = pypb.protobuf(buff).to_map()
+        mtp = None
         if pb[1] == 1:
             raw = pb[2]
             mtp = None
@@ -61,3 +62,31 @@ class mt_lite:
         print(wrapper.get_buffer())
         buff = wrapper.get_buffer()
         self.radio.write(buff)
+
+    def get_config(self,key):
+        wrapper = pypb.protobuf()
+        wrapper.encode(1,pypb.PB_VARINT,2)
+        wrapper.encode(2,pypb.PB_VARINT,0)
+        wrapper.encode(3,pypb.PB_STRING,key)
+        self.radio.write(wrapper.get_buffer())
+        msg = None
+        while msg == None:
+            self.update()
+            msg = self.radio.read()
+        pb = pypb.protobuf(msg)
+        return pb.to_map()[3]
+    
+    def set_config(self,key,value):
+        wrapper = pypb.protobuf()
+        wrapper.encode(1,pypb.PB_VARINT,2)
+        wrapper.encode(2,pypb.PB_VARINT,1)
+        wrapper.encode(3,pypb.PB_STRING,key)
+        wrapper.encode(4,pypb.PB_STRING,value)
+        self.radio.write(wrapper.get_buffer())
+        
+    def save_config(self):
+        wrapper = pypb.protobuf()
+        wrapper.encode(1,pypb.PB_VARINT,2)
+        wrapper.encode(2,pypb.PB_VARINT,2)
+        self.radio.write(wrapper.get_buffer())
+    

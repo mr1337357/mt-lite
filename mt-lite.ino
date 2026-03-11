@@ -33,14 +33,17 @@ void radioEvent(void)
   transmitFlag = true;
 }
 
-float freq = 906.875;
+float freq = 906.875; //frequency
+float bw = 250.0; //bandwidth
+uint8_t sf = 9; //spread factor
+uint8_t cr=7; //coding rate
+uint8_t syncWord=0x2B;
+int8_t power=22;
+uint16_t pl=16;
 
 void mt_send(uint8_t *buff, int len)
 {
-  Serial.printf("here %d\n",__LINE__);
-  Serial.printf("txlen %d\n",len);
   int16_t status = radio.startTransmit(buff,len);
-  Serial.printf("status %d\n",status);
 }
 
 void setup() {
@@ -56,11 +59,32 @@ void setup() {
   if(nvdata.get("freq",(uint8_t *)&freq,&len)<0)
   {
     nvdata.set("freq",(uint8_t *)&freq,4);
+    nvdata.set("bw",(uint8_t *)&bw,4);
+    nvdata.set("sf",(uint8_t *)&sf,1);
+    nvdata.set("cr",(uint8_t *)&cr,1);
+    nvdata.set("syncword",(uint8_t *)&syncWord,1);
+    nvdata.set("power",(uint8_t *)&power,1);
+    nvdata.set("pl",(uint8_t *)&pl,1);
     nvdata.save();
+  }
+  else
+  {
+    len = 4;
+    nvdata.get("bw",(uint8_t *)&bw,&len);
+    len = 1;
+    nvdata.get("sf",(uint8_t *)&sf,&len);
+    len = 1;
+    nvdata.get("cr",(uint8_t *)&cr,&len);
+    len = 1;
+    nvdata.get("syncword",(uint8_t *)&syncWord,&len);
+    len = 1;
+    nvdata.get("power",(uint8_t *)&power,&len);
+    len = 1;
+    nvdata.get("pl",(uint8_t *)&pl,&len);
   }
 
   Serial.printf("Radio Init\n");
-  int state = radio.begin(freq, 250.0, 11, 5, 0x2B, 22, 16, 1.6, false);
+  int state = radio.begin(freq, 250.0, 11, 5, 0x2B, power, pl, 1.6, false);
   if (state == RADIOLIB_ERR_NONE) {
     Serial.println(F("success!"));
   } else {

@@ -18,7 +18,7 @@ if __name__ == '__main__':
     log = open('test.log','w')
     
     users = sqlwrapper()
-    radio = mt_radio_serial.mt_radio_serial(sys.argv[1])
+    radio = mt_radio_serial.mt_radio_serial(sys.argv[1],diag=True)
     mesht = mt_lite(radio)
     sendpkt = mt_packet()
     sendpkt.src = 0x13371337
