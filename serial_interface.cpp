@@ -96,7 +96,15 @@ void serial_config(picopb *pb)
         }
         break;
       case 2:
+        Serial.printf("save\n");
         nvdata.save();
+        break;
+      case 3:
+        Serial.printf("should restart\n");
+        ESP.restart();
+
+        uint8_t *crash = (uint8_t *)0;
+        *crash = 0;
         break;
     }
   }

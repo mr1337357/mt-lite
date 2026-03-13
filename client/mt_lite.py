@@ -90,3 +90,8 @@ class mt_lite:
         wrapper.encode(2,pypb.PB_VARINT,2)
         self.radio.write(wrapper.get_buffer())
     
+    def restart(self):
+        wrapper = pypb.protobuf()
+        wrapper.encode(1,pypb.PB_VARINT,2)
+        wrapper.encode(2,pypb.PB_VARINT,3)
+        self.radio.write(wrapper.get_buffer())

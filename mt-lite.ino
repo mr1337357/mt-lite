@@ -84,7 +84,7 @@ void setup() {
   }
 
   Serial.printf("Radio Init\n");
-  int state = radio.begin(freq, 250.0, 11, 5, 0x2B, power, pl, 1.6, false);
+  int state = radio.begin(freq, bw, sf, cr, syncWord, power, pl, 1.6, false);
   if (state == RADIOLIB_ERR_NONE) {
     Serial.println(F("success!"));
   } else {

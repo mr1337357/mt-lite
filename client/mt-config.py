@@ -17,7 +17,7 @@ from sql_wrapper import sqlwrapper
 
 if __name__ == '__main__':
     users = sqlwrapper()
-    radio = mt_radio_serial.mt_radio_serial(sys.argv[1],diag=False)
+    radio = mt_radio_serial.mt_radio_serial(sys.argv[1],diag=True)
     mesht = mt_lite(radio)
     if sys.argv[2] == 'get':
         cfg = mesht.get_config('freq')
@@ -51,5 +51,10 @@ if __name__ == '__main__':
     if sys.argv[2] == 'save':
         mesht.save_config()
 
+    if sys.argv[2] == 'restart':
+        mesht.restart()
+
+    time.sleep(1)
+    mesht.update()
     time.sleep(1)
     mesht.update()
