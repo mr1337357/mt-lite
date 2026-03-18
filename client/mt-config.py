@@ -39,14 +39,18 @@ if __name__ == '__main__':
         power = int.from_bytes(cfg)
         print('power {}'.format(power))
     if sys.argv[2] == 'set':
-        key = sys.argv[3]
-        value = sys.argv[4]
-        if key == 'freq' or key == 'bw':
-            value = float(value)
-            value = struct.pack('<f',value)
-        else:
-            value = int(value).to_bytes(1)
-        mesht.set_config(key,value)
+        i = 3
+        while i < len(sys.argv):
+            key = sys.argv[i]
+            i += 1
+            value = sys.argv[i]
+            i += 1
+            if key == 'freq' or key == 'bw':
+                value = float(value)
+                value = struct.pack('<f',value)
+            else:
+                value = int(value).to_bytes(1)
+            mesht.set_config(key,value)
 
     if sys.argv[2] == 'save':
         mesht.save_config()

@@ -9,6 +9,8 @@
 
 #if defined(WIFI_LORA_32_V3)
 #include "boards/heltec_v3.h"
+#elif defined(WIFI_LORA_32_V4)
+#include "boards/heltec_v4.h"
 #elif defined(NUGGET_CONNECT)
 #include "boards/nugget_connect.h"
 #else
@@ -35,8 +37,8 @@ void radioEvent(void)
 
 float freq = 906.875; //frequency
 float bw = 250.0; //bandwidth
-uint8_t sf = 9; //spread factor
-uint8_t cr=7; //coding rate
+uint8_t sf = 11; //spread factor
+uint8_t cr = 5; //coding rate
 uint8_t syncWord=0x2B;
 int8_t power=22;
 uint16_t pl=16;
@@ -92,6 +94,10 @@ void setup() {
     Serial.println(state);
     while (true) { delay(10); }
   }
+
+  #if defined(WIFI_LORA_32_V4)
+  radio.setDio2AsRfSwitch(true);
+  #endif
 
   // set the function that will be called
   // when new packet is received

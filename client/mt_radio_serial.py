@@ -22,7 +22,7 @@ class mt_radio_serial(mt_radio):
                 if b == 0x94:
                     self.state = 1
                 elif self.diag:
-                    sys.stdout.write(chr(b))
+                    sys.stderr.write(chr(b))
             
             elif self.state == 1:
                 if b == 0xC3:
